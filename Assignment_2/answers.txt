@@ -1,0 +1,47 @@
+/*
+
+Professional Masters in Big Data Program - Simon Fraser University
+
+Assignment 2 (Question 4 - Answers.txt)
+
+Submission Date: 18th September 2018
+Name: Anurag Bejju
+Student ID: 301369375
+Professor Name: Gregory Baker
+
+*/
+
+1. In the WikipediaPopular class, it would be much more interesting to find the page that is most popular, not just the view count (as we did with Spark). What would be necessary to modify your class to do this? (You don't have to actually implement it.)
+
+Ans: The required result can be achieved by making two changes in the mapper as well as reducer class.
+The output of the mapper class should be PairWritable containing a pair of page view count and the name associated with it. The reducer class should input this and then find the max page view count for the associated key (i.e timestamp). After the max value is found, the output should return a PairWritable with values (Max_Page_Views, Associated_Name).
+
+2. An RDD has many methods: it can do many more useful tricks than were at hand with MapReduce. Write a sentence or two to explain the difference between .map and .flatMap. Which is more like the MapReduce concept of mapping?
+
+Ans: TThe difference between map operation and flatMap operation is that the former produces one output value for each input value and the later produces values ranging from 0 or more for each input value.
+
+For example we have a square function unit_square which returns [a,a**a] and we have an RDD test_data = [1,2,3] then .map(unit_square) would result in [[1,1],[2,4],[3,9]] and .flatMap(unit_square) would result in [1,1,2,4,3,9]. This implies that .map takes in 1 as input and returns one output [1,2] whereas .flatMap works similar to .map but it flattens out the result.
+
+Since the functionality of Mapper is to take a series of key/value pairs, processes each, and generate zero or more output key/value pairs, the flatMap function is preferable option to do this.
+
+3. Do the same for .reduce and .reduceByKey. Which is more like the MapReduce concept of reducing?
+
+Ans: TThe difference between reduce operation and reduceByKey operation is that the former reduces an RDD to a single value by combining elements based on the assigned function and the later individually reduces the RDD for each key value.
+Since the Reducer function iterates through the values that are associated with that key and produce zero or more outputs, reduceByKey would be the preferable option.
+
+4. When finding popular Wikipedia pages, the maximum number of page views is certainly unique, but the most popular page might be a tie. What would your improved Python implementation do if there were two pages with the same highest number of page views in an hour? What would be necessary to make your code find all of the pages views the maximum number of times? (Again, you don't have to actually implement this.)
+
+Ans: Just a small tweak in the reducer function can achieve the expected result.
+In the program, the mapper function outputs key and value in (String, [int , string]) format with int having the count and string being the name.
+In order to list out all the names of the persons having max page views, we simply merge the values whenever they are equal. To weed out duplicates, we only merge when the names of the persons are different.
+
+def find_max_value(l,m):
+
+#l[0] and m[0] are page view count where as l[1] and m[1] are name of the persons
+    if l[0] == m[0] and l[1] != m[1]:
+        return [l[0],l[1]+' , '+m[1]]
+    else:
+        return max(l,m)
+
+This results would be in this format:
+		 20160801-00    (1999 , 'Simon_Scarrow , Simon_Monjack , Simon_Beaufoy') 

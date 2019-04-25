@@ -1,0 +1,35 @@
+#  Professional Masters in Big Data Program - Simon Fraser University
+
+#  Assignment 7 (Question 3 - Answers.txt)
+
+#  Submission Date: 26th October 2018
+#  Name: Anurag Bejju
+#  Student ID: 301369375
+#  Professor Name: Gregory Baker
+
+1. What happened when you inserted another row with the same primary key as an existing row?
+Ans: An upsert operation is executed. This implies that the record gets overwritten when you insert with the same primary key .
+
+2. What happened when you query a keyspace with replication factor 1 and one node down? How did it behave with replication factor 2 and a node down?
+Ans: The query had failed when it was executed with the keyspace having a replication factor 1 and one node was down. It had returned the row value when the replication factor was set to 2 and one node was down.
+
+3. How did the consistency level affect the results with the node up/down?
+Ans: #Case 1 : Consistency Level ALL
+When we use consistency level ALL and if a downed node had a replica of the value we would like to read, then it would result in an error as the data would not be consistent in ALL the nodes.
+
+#Case 2 :  With Consistency ONE
+It would return a result if we are able to read any available replica of the requested data. There are cases where it would result in an error if the data is only stored in the downed node and has no replica in any other nodes.
+
+4. Which of the WHERE id=? values returned successfully with CONSISTENCY ALL when one of the nodes was down? Why do you think some could be returned but not others?
+
+Ans. When the select query was executed, values with id 1 and 3 had returned but the values with id 2 did not. This case happened because values with id 1 and 3 had replicas in all the nodes which were available. Where as values for id 2 is stored in the downed node and can't satisfy consistency ALL resulting to the error.
+
+5. What was the CREATE TABLE statement you used for the nasalogs table? What was the primary key you choose, and why?
+Ans. This is my create statement where the table_name is passed by the user. Also I have set (host, id) tuple as my primary key.
+
+create_statement = 'CREATE TABLE IF NOT EXISTS ' + table_name + ' (id UUID, host TEXT, date_time TIMESTAMP, path_value TEXT, bytes INT, PRIMARY KEY (host,id))'
+
+Just for simplicity sake, I would just use UUID as my primary key as it satisfies the requirement of being unique. But as we would be using this for assignment 8 where we have to aggregate data by host, then I thought of making a compound key combination of host and uuid as my primary key. Here the host can be first element of our tuple and uuid can be second element.
+
+6. What was the CQL query you used (or tried) to get the total number of bytes?
+Ans. SELECT SUM(bytes) FROM nasalogs;

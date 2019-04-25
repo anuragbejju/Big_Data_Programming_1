@@ -1,0 +1,71 @@
+/*
+
+Professional Masters in Big Data Program - Simon Fraser University
+
+Assignment 5 (Question 5 - Answers.txt)
+
+Submission Date: 10th October 2018
+Name: Anurag Bejju
+Student ID: 301369375
+Professor Name: Gregory Baker
+*/
+
+
+1) In the Reddit averages execution plan, which fields were loaded? How was the average computed (and was a combiner-like step done)?
+
+Answer:
+== Physical Plan ==
+*(3) HashAggregate(keys=[subreddit#18], functions=[avg(score#16L)])
++- Exchange hashpartitioning(subreddit#18, 200)
+   +- *(2) HashAggregate(keys=[subreddit#18], functions=[partial_avg(score#16L)])
+      +- Exchange RoundRobinPartitioning(8)
+         +- *(1) FileScan json [score#16L,subreddit#18] Batched: false, Format: JSON, Location: InMemoryFileIndex[hdfs://nml-cloud-149.cs.sfu.ca:8020/courses/732/reddit-5], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<score:bigint,subreddit:string>
+Since only required columns are read, score and subreddit fields were loaded.
+Later aggregation is done locally for sum and count (like a combiner) and then it got shuffled and finished
+
+
+2) What was the running time for your Reddit averages implementations in the five scenarios described above? How much difference did Python implementation make (PyPy vs the default CPython)? Why was it large for RDDs but not for DataFrames?
+
+Answer: These are the reunning times for Reddit averages implementations in the five scenarios
+MapReduce -> 1m46.411s
+Spark DataFrames (with CPython) -> 1m45.308s
+Spark RDDs (with CPython) -> 3m55.185s
+Spark DataFrames (with PyPy) -> 1m15.234s
+Spark RDDs (with PyPy) -> 2m3.703s
+
+In both the cases of Dataframes and RDD's, there was an improvement in the execution time with PyPy based implementation over CPython.
+In case of RDDS, there was approximately 1 minute 52 seconds improvement and in case of DataFrames, 30 seconds improvement was observed in execution time when PyPy is used.
+
+Spark RDDs have some performance limitations over Dataframes. They use in-memory jvm objects and involve the overhead of Garbage Collection and Serialization which are expensive when data grows. On flipside, Dataframes have Custom Memory management where the data is stored in off-heap memory in binary format with no Garbage Collection overhead involved. By knowing the schema of data in advance and storing efficiently in binary format, expensive Serialization is also avoided. Also Query plans are created for execution using Spark catalyst optimiser. After an optimised execution plan is prepared going through some steps, the final execution happens internally on RDDs only but thats completely hidden from the users. These are some reasons for dataframes having lesser execution time compared to RDDs.
+
+
+3) How much of a difference did the broadcast hint make to the Wikipedia popular code's running time (and on what data set)?
+
+Answer: These are the results I have got after running the program on datasets pagecounts-1 and pagecounts-3
+
+For pagecounts-1 data, the execution time was:
+Without broadcast: 2m8.960s
+With broadcast: 0m49.690s
+Difference: 1 minute 19 seconds
+
+For pagecounts-3 data, the execution time was:
+Without broadcast: 1m41.640s
+with broadcast: 1m36.960s
+Difference: 5 seconds
+
+4. How did the Wikipedia popular execution plan differ with and without the broadcast hint?
+
+Answers: Without broadcast, the exceution plan had:
++- *(5) Sort [max_count#53L ASC NULLS FIRST, filename#56 ASC NULLS FIRST], false, 0
+   +- Exchange hashpartitioning(max_count#53L, filename#56, 200)
+
+Here, The hash join ensures that data on each partition will contain the same keys by partitioning the second dataset with the same default partitioner as the first, so that the keys with the same hash value from both datasets are in the same partition.
+
+With broadcast, the exceution plan had:
++- BroadcastExchange HashedRelationBroadcastMode(List(input[1, bigint, false], input[0, string, true]))
+In Broadcast join, dataset is copied to all the worker nodes so the original parallelism of the larger DataFrame is maintained.
+
+5. For the weather data question, did you prefer writing the “DataFrames + Python methods” style, or the “temp tables + SQL syntax” style form solving the problem? Which do you think produces more readable code?
+
+Answers: I prefered writing the the program in “temp tables + SQL syntax” style as it involved writing queries in SQL language (Something I am more comfortable in using).
+In comparision, I found “DataFrames + Python methods” to be more readable. In my opinion simple logic looks simpler in SQL syntax, difficult logic looks more simpler in the Python-method-call syntax.

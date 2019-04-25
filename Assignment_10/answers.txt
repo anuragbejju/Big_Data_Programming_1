@@ -1,0 +1,19 @@
+#  Professional Masters in Big Data Program - Simon Fraser University
+
+#  Assignment 10 (Question 1 - answers.txt)
+
+#  Submission Date: 13th November 2018
+#  Name: Anurag Bejju
+#  Student ID: 301369375
+#  Professor Name: Gregory Baker
+
+1. What happened to the HDFS file when one of the nodes it was stored on failed?
+
+Ans. Since Hadoop ensures that the files were replicated across the cluster, When one node with the replica file stored on failed, it replace the downed node with another node containing a replica of all the data in it. This keeps the replication factor intact.
+
+2. How did YARN/MapReduce behave when one of the compute nodes disappeared?
+
+Ans. When we kill one of the nodes computing a job, YARN responds to this by distributing the task to other available executors. When node three was made to fail, out of 20 tasks assigned to it, it finished 8 tasks by then. the remaining 12 tasks were distributed among other 4 executors (1,2,4,5). Also when I killed node 3, the web frontend showed an error that it couldn't find address for the associated executor (3).
+
+3. Were there more things you'd like to try with this cluster, or anything you did try that you think should have been in this assignment?
+Ans. Even though the current assignment provided a good understanding of how hadoop provides fault tolerance, it would be really interesting to know more about High Availability clusters and its fault tolerance mechanism. Since a HA architecture solves the problem of NameNode availability by allowing us to have two NameNodes in an active/passive configuration. It would be intriguing to see two running NameNodes at the same time in a High Availability cluster: Active NameNode, Standby/Passive NameNode would respond when one NameNode goes down and the other NameNode can take over the responsibility reducing the cluster down time.

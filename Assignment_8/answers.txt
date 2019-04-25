@@ -1,0 +1,77 @@
+#  Professional Masters in Big Data Program - Simon Fraser University
+
+#  Assignment 8 (Question 5 - answers.txt)
+
+#  Submission Date: 2nd November 2018
+#  Name: Anurag Bejju
+#  Student ID: 301369375
+#  Professor Name: Gregory Baker
+
+
+1. What did you see in the execution plan for the "join in Spark" solution? Why was the execution so fast (and the memory usage so small)?
+
+Ans: As you can see in the Physical Plan below, we are joining only few records from each table.
+That is in this case 5 entries from orders table ( order keys - 151201,986499,28710,193734,810689) and its associated parts in parts tables (which is not more that 20 records).
+Since we are not joining all records and filtering out the required ones before joining, the execution is very fast and consumes very less memory.
+
+== Physical Plan ==
+*(10) Sort [orderkey#0 ASC NULLS FIRST], true, 0
++- Exchange rangepartitioning(orderkey#0 ASC NULLS FIRST, 200)
+   +- ObjectHashAggregate(keys=[orderkey#0, totalprice#8], functions=[collect_set(name#56, 0, 0)])
+      +- Exchange hashpartitioning(orderkey#0, totalprice#8, 200)
+         +- ObjectHashAggregate(keys=[orderkey#0, totalprice#8], functions=[partial_collect_set(name#56, 0, 0)])
+            +- *(9) Project [orderkey#0, totalprice#8, name#56]
+               +- *(9) SortMergeJoin [partkey#26], [partkey#51], Inner
+                  :- *(6) Sort [partkey#26 ASC NULLS FIRST], false, 0
+                  :  +- Exchange hashpartitioning(partkey#26, 200)
+                  :     +- *(5) Project [orderkey#0, totalprice#8, partkey#26]
+                  :        +- *(5) SortMergeJoin [orderkey#0], [orderkey#20], Inner
+                  :           :- *(2) Sort [orderkey#0 ASC NULLS FIRST], false, 0
+                  :           :  +- Exchange hashpartitioning(orderkey#0, 200)
+                  :           :     +- *(1) Filter (cast(orderkey#0 as string) IN (151201,986499,28710,193734,810689) && isnotnull(orderkey#0))
+                  :           :        +- *(1) Scan org.apache.spark.sql.cassandra.CassandraSourceRelation@731683e3 [orderkey#0,totalprice#8] PushedFilters: [IsNotNull(orderkey)], ReadSchema: struct<orderkey:int,totalprice:decimal(38,18)>
+                  :           +- *(4) Sort [orderkey#20 ASC NULLS FIRST], false, 0
+                  :              +- Exchange hashpartitioning(orderkey#20, 200)
+                  :                 +- *(3) Filter ((cast(orderkey#20 as string) IN (151201,986499,28710,193734,810689) && isnotnull(orderkey#20)) && isnotnull(partkey#26))
+                  :                    +- *(3) Scan org.apache.spark.sql.cassandra.CassandraSourceRelation@2cfb9a81 [orderkey#20,partkey#26] PushedFilters: [IsNotNull(orderkey), IsNotNull(partkey)], ReadSchema: struct<orderkey:int,partkey:int>
+                  +- *(8) Sort [partkey#51 ASC NULLS FIRST], false, 0
+                     +- Exchange hashpartitioning(partkey#51, 200)
+                        +- *(7) Filter isnotnull(partkey#51)
+                           +- *(7) Scan org.apache.spark.sql.cassandra.CassandraSourceRelation@3a41415b [partkey#51,name#56] PushedFilters: [IsNotNull(partkey)], ReadSchema: struct<partkey:int,name:string>
+
+
+2. What was the CREATE TABLE statement you used for the orders_parts table?
+
+Ans: create_statement = 'CREATE TABLE IF NOT EXISTS orders_parts (orderkey int, custkey int, orderstatus text, totalprice decimal, orderdate date, order_priority text, clerk text, ship_priority int, comment text, part_names set<text>, PRIMARY KEY (orderkey));'
+
+
+3. What were the running times of the two tpch_orders_* programs on the tpch2 data on the cluster?
+
+Ans: For orderkeys - [ 151201, 986499, 28710, 193734 , 810689 ] and tpch2 data set, the following programs had running time of:
+
+tpch_orders_df.py
+real    1m49.101s
+user    0m57.114s
+sys     0m2.064s
+
+tpch_orders_denorm.py
+real    0m46.559s
+user    0m18.120s
+sys     0m1.132s
+
+4. Consider the logic that you would have to implement to maintain the denormalized data (assuming that the orders table had the part_names column in the main data set). Write a few sentences on what you'd have to do when inserting/updating/deleting data in this case.
+
+Ans: Here is a very broad solution for the above question.
+
+Inserting:
+- When we insert a single entry to the order table having a set of part names in it, we need to also insert these parts in the part table. Also the lineitem table needs to be updated by creating a new reference from the new partkey and orderkey created .
+- Similarly if we insert a new entry in part table, then the order table , lineitem table should reflect this change.
+
+Update:
+- If the update is not on the part_names column in orders table, then no further change needs to be done.
+- If update is on part name column, update the column in orders table as well as update it in parts table using the reference in lineitem table.
+
+
+Deletion:
+- If the order is deleted, all its references in lineitem and part table should be deleted
+- If the part is deleted, remove the reference in lineitem table and update the record in order table by removing the partname from the list

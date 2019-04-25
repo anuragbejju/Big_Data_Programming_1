@@ -1,0 +1,36 @@
+/*
+
+Professional Masters in Big Data Program - Simon Fraser University
+
+Assignment 1 (Question 3 - Answers.txt)
+
+Submission Date: 11th September 2018
+Name: Anurag Bejju
+Student ID: 301369375
+Professor Name: Gregory Baker
+
+*/
+
+1) Are there any parts of the original WordCount that still confuse you? If so, what?
+
+No. The original code of word count acts as a great example to help us understand the Map-Reduce phases effectively. It shows the MapperClass converting a large piece of text data into words without any blank spaces, punctuations, and case variations in it. This data gets further reduced in ReducerClass, with the count of each word cumulated against it. 
+That said, this method of map-reduce seems to be a bit restrictive in nature as we are expected to fit any given big data problem into a map-reduce pattern. Also, the output data is stored in DFS after each step which can bring out disk space issues with the increase in the volume of data.
+
+
+2) How did the output change when you submitted with -D MapReduce.job.reduces=3? Why would this be necessary if your job produced large output sets?
+
+The number of splits or partitions done by the MapperClass is determined by the InputFormat parameter. On the flip side, the number of reducers required to process the output of the mapper class is determined by the user. By default, only one reducer is set. In case we want more reducers to perform the task we can pass it through this command [i.e  -D MapReduce.job.reduces=3].
+
+ In this case, we want three reducers to perform the reduce operation in parallel. This would create 3 output files resulted from RedditAverageReducerClass. This would be necessary when we have to MapReduce large sets of files and one reducer creates just one large output file. It would be difficult to perform post-processing tasks on such large size output files. Having multiple reducers (i.e choosing the right number of reducers - not too big not too small) generally, provides a good load balance which will improve the efficiency of the whole task.
+
+
+3) How was the -D mapreduce.job.reduces=0 output different?
+
+Here the number of reducers assigned to process this task is set to zero. This leads to each file being processed by RedditAverageMapperClass only. Therefore each input file will have an associated output file with the result of MapperClass in it. The data outputted will be in < Text , LongPairWritable <Long, Long> > form.
+
+
+4) Was there any noticeable difference in the running time of your RedditAverage with and without the combiner optimization?
+
+Yes. The runtime without the combiner operation was less than the runtime with the combiner operation. Since the combiner performs like mini reducer and strives to reduce the network traffic between Reducer and Mapper, it generally improves the overall performance of the reducer as it has to process less number of key, value. This might lead to an increase in the process time but will make the program more efficient.
+
+

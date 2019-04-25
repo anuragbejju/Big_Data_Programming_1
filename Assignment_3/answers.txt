@@ -1,0 +1,45 @@
+/*
+
+Professional Masters in Big Data Program - Simon Fraser University
+
+Assignment 3 (Question 4 - Answers.txt)
+
+Submission Date: 26th September 2018
+Name: Anurag Bejju
+Student ID: 301369375
+Professor Name: Gregory Baker
+
+*/
+
+1) What was wrong with the original wordcount-5 data set that made repartitioning worth it? Why did the program run faster after?
+
+As you can see the input file structure in the table below, the size of the files ranges from 82.2 KB to 259.7 MB. This means that the executors will finish processing [2,3,4,5,7,8] files in a reasonable amount of time whereas files [1,6] will be assigned to two executors which will take significantly longer time.
+
+259.7 M --> /courses/732/wordcount-5/7.txt.gz  [1]
+91.2  K --> /courses/732/wordcount-5/F.txt.gz  [2]
+82.2  K --> /courses/732/wordcount-5/S.txt.gz  [3]
+42.0  M --> /courses/732/wordcount-5/d.txt.gz  [4]
+89.5  M --> /courses/732/wordcount-5/g.txt.gz  [5]
+110.6 M --> /courses/732/wordcount-5/m.txt.gz  [6]
+18.5  M --> /courses/732/wordcount-5/o.txt.gz  [7]
+75.6  M --> /courses/732/wordcount-5/s.txt.gz  [8]
+
+In order to avoid this, we can partition the input data which will both horizontally scale and compute it.
+
+2) The same fix does not make this code run faster on the wordcount-3 data set. (It may be slightly slower?) Why? [For once, the answer is not “the data set is too small”.]
+
+Unlike wordcount-5, wordcount-3 input file structure is partitioned fairly and the size of the files are scaled equally. Due to this, repartitioning would be a redundant exercise and would add to the overhead cost for the program. Therefore this code would run a little faster when not partitioned than otherwise.
+
+3) How could you modify the wordcount-5 input so that the word count code can process it and get the same results as fast as possible? (It's possible to get about another minute off the running time.)
+
+As we have seen in answer 1, the input file structure for wordcount-5 is partitioned unevenly. If we repartition the input files and create a fairly distributed file structure, it would lead to a better runtime. Basically, after the input files are repartitioned prior to executing the code, it must be used as an input for all future runs.
+
+4) When experimenting with the number of partitions while estimating Euler's constant, you likely didn't see much difference for a range of values and chose the final value in your code somewhere in that range. What range of partitions numbers was “good” (on the desktop/laptop where you were testing)?
+
+For an input value of 100000000, the ideal good range for my number of partition was from 8 to 20. This could vary based on the input size.
+
+5) How much overhead does it seem like Spark adds to a job? How much speedup did PyPy get over the usual Python implementation? 
+
+There is a significant speedup observed in runtime when we used PyPy with spark compared to Python with spark. Based on my observations, the runtime for PyPy based execution was 27 seconds and for python based execution was 3 minutes 12 seconds.
+
+Since speedup is : L2(old runtime) /L1(new runtime) we get 192/27 = 7.11 speedup in this case. This implies that PyPy has a speedup of 7.11 times over python based execution.

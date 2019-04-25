@@ -1,0 +1,64 @@
+#  Professional Masters in Big Data Program - Simon Fraser University
+
+#  Assignment 9 (Question 5 - answers.txt)
+
+#  Submission Date: 11th November 2018
+#  Name: Anurag Bejju
+#  Student ID: 301369375
+#  Professor Name: Gregory Baker
+
+
+1. What is your best guess for the slope and intercept of the streaming points being produced?
+Answer:
+        +-----------------+-------------------+
+        |  intercept_aplha|         slope_beta|
+        +-----------------+-------------------+
+        |45.68935411709643|-51.298683815976524|
+        +-----------------+-------------------+
+
+2. Is your streaming program's estimate of the slope and intercept getting better as the program runs? (That is: is the program aggregating all of the data from the start of time, or only those that have arrived since the last output?)
+
+Answer: Yes. The program aggregates all of the data from the start of time. If you see the calculation for n (total number of entries), it gives the count of all entries from the beginning and not just the count for newly updated entries since the last output.
+Therefore with more values coming in, the alpha and beta values become more precise and its variation reduces significantly.
+
+
+3. In the colour classification question, what were your validation scores for the RGB and LAB pipelines?
+
+Answer: After experimenting with various regression models, GBTRegressor yielded the best result for the provided datasets.
+
+Validation score for RGB model: 0.659122
+Validation score for LAB model: 0.720034
+
+4. When predicting the tmax values, did you over-fit the training data (and for which training/validation sets)?
+
+Answer: Yes. My model was overfitting for tmax-1 dataset. The RSME value for validation set was 4.349304305875038 and on testing set it was 5.291079860754963.
+Where as the model did not overfit for tmax-2 dataset.  The RSME value for validation set was 3.6987008654012827 and on testing set it was  3.717114020967849.
+
+5. What were your testing scores for your model with and without the “yesterday's temperature” feature?
+
+Answer: The testing scores for the model are:
+
+Without Temperature:
+r2 = 0.8134295476949065
+rmse = 5.602651944262906
+
+With Temperature:
+r2 = 0.912830300561832
+rmse = 3.717114020967849
+
+6. If you're using a tree-based model, you'll find a .featureImportances property that describes the relative importance of each feature (code commented out in weather_test.py; if not, skip this question). Have a look with and without the “yesterday's temperature” feature: do the results make sense and suggest that your model is making decisions reasonably? With “yesterday's temperature”, is it just predicting “same as yesterday”?
+
+Answer: The relative importance for model without the “yesterday's temperature” feature is:
+"latitude" : 0.279775454058267
+"longitude" : 0.21139681516691008
+"elevation" : 0.16088936967504472
+"day_of_year" : 0.3479383610997782 ==> Maximum Importance
+
+The relative importance for model with the “yesterday's temperature” feature is:
+"latitude" : 0.19901162245521628
+"longitude" : 0.18489738641399087
+"elevation" : 0.1465996161487184
+"day_of_year" : 0.2606889328973102 ==> Maximum Importance
+"yesterday_tmax" :  0.20880244208476423
+
+My model still gives Maximum Importance to day_of_year in both the above cases. Also it predicts tmax temperature on 13th November 2018 to be 10.83508066016283, which is not same as the temperature on 12th November 2018 (yesterdays temperature = 12). Based on these observation, my chosen model is making decisions reasonably.
